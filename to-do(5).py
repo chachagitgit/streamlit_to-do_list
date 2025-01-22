@@ -39,7 +39,7 @@ def add_task(todo_list):
     task_name = st.text_input("Enter the task you want to add:")
     if task_name:
         try:
-            priority = st.number_input("Enter the priority of the task (1 = highest priority)", min_value=1, step=1)
+            priority = st.number_input("Enter the priority of the task (1 = highest priority)", min_value=0, step=1)
             todo_list.append({'name': task_name, 'priority': priority, 'completed': False})
             st.success(f"Task '{task_name}' with priority {priority} added.")
         except ValueError:
