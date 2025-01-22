@@ -118,16 +118,19 @@ def main():
         deadline = st.date_input("Deadline (optional)", value=None)
         if st.button("Add Task"):
             if task_name.strip():
-                todo_list.append(
-                    {
-                        "name": task_name.strip(),
-                        "priority": int(priority),
-                        "deadline": deadline.strftime("%d/%m/%Y") if deadline else None,
-                        "completed": False,
-                    }
-                )
-                save_data()
-                st.success(f"Task '{task_name}' added.")
+                if deadline and deadline < datetime.today().date():
+                    st.error("The deadline cannot be in the past.")
+                else:
+                    todo_list.append(
+                        {
+                            "name": task_name.strip(),
+                            "priority": int(priority),
+                            "deadline": deadline.strftime("%d/%m/%Y") if deadline else None,
+                            "completed": False,
+                        }
+                    )
+                    save_data()
+                    st.success(f"Task '{task_name}' added.")
             else:
                 st.error("Task name cannot be empty.")
 
