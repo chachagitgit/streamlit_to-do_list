@@ -56,13 +56,32 @@ def main():
     load_data()  # Load data at the start
 
     # Sidebar menu
-    menu = ["View All Tasks", "View Pending Tasks", "View Completed Tasks", "Add Task", "Mark Task Complete", "Remove Task"]
+    menu = [
+        "View All Tasks",
+        "View Tasks Sorted by Priority and Deadline",
+        "View Pending Tasks",
+        "View Completed Tasks",
+        "Add Task",
+        "Mark Task Complete",
+        "Remove Task",
+    ]
     choice = st.sidebar.selectbox("Menu", menu)
 
     # Display tasks
     if choice == "View All Tasks":
         st.header("All Tasks")
         tasks = get_sorted_tasks("all")
+        if tasks:
+            for idx, task in enumerate(tasks, 1):
+                status = "✓" if task["completed"] else "✗"
+                deadline = task["deadline"] or "No deadline"
+                st.write(f"{idx}. {task['name']} [Priority: {task['priority']}] [Deadline: {deadline}] [{status}]")
+        else:
+            st.write("No tasks to display.")
+
+    elif choice == "View Tasks Sorted by Priority and Deadline":
+        st.header("Tasks Sorted by Priority and Deadline")
+        tasks = get_sorted_tasks("priority")
         if tasks:
             for idx, task in enumerate(tasks, 1):
                 status = "✓" if task["completed"] else "✗"
