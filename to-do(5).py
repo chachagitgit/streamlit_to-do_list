@@ -49,7 +49,7 @@ def add_task(todo_list):
 def mark_complete(todo_list):
     sorted_tasks = view_tasks(todo_list)
     if sorted_tasks:
-        task_number = st.number_input("Enter the number of the task to mark as complete") 
+        task_number = st.number_input("Enter the number of the task to mark as complete", value=None) 
         if 1 <= task_number <= len(sorted_tasks):
             task_to_mark = sorted_tasks[task_number - 1]
             for i, task in enumerate(todo_list):
@@ -62,7 +62,7 @@ def mark_complete(todo_list):
 def remove_task(todo_list):
     sorted_tasks = view_tasks(todo_list)
     if sorted_tasks:
-        task_number = st.number_input("Enter the number of the task to remove") 
+        task_number = st.number_input("Enter the number of the task to remove", value=None) 
         if 1 <= task_number <= len(sorted_tasks):
             task_to_remove = sorted_tasks[task_number - 1]
             for i, task in enumerate(todo_list):
