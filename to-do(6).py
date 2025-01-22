@@ -1,114 +1,152 @@
-import streamlit as st
 import json
+import streamlit as st
 from datetime import datetime
 
-todo_list = []
+# File and data initialization
 filename = "todo_list.json"
+todo_list = []
 
+# Load and save data functions
 def load_data():
     """Loads the to-do list from a JSON file."""
+    global todo_list
     try:
-        with open(filename, 'r') as f:
-            global todo_list
+        with open(filename, "r") as f:
             todo_list = json.load(f)
     except FileNotFoundError:
-        pass  # If the file doesn't exist, start with an empty list
+        todo_list = []  # Start with an empty list if no file exists
 
 def save_data():
     """Saves the to-do list to a JSON file."""
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         json.dump(todo_list, f, indent=2)
 
-def display_menu():
-    """Displays the menu options and returns the selected choice."""
-    menu_options = ["View All Tasks", "View Tasks Sorted by Priority", "View Pending Tasks", "View Completed Tasks", "Add Task", "Mark Task as Complete", "Remove Task", "Exit"]
-    selected_option = st.selectbox("Select an option:", menu_options)
-    return selected_option
-
-def view_tasks(option="all"):
-    """
-    Displays tasks based on the selected option.
-    Options:
-    - "all": View all tasks without sorting.
-    - "priority": View tasks sorted by priority and then by deadline.
-    - "pending": View only pending tasks, sorted by priority and deadline.
-    - "completed": View only completed tasks, sorted by priority and deadline.
-    """
-    if not todo_list:
-        st.write("\nYour to-do list is empty!")
-        return
-
+# Task viewing functions
+def get_sorted_tasks(option="all"):
     if option == "all":
-        tasks_to_view = todo_list
-        title = "All Tasks"
+        return todo_list
     elif option == "priority":
-        tasks_to_view = sorted(
+        return sorted(
             todo_list,
             key=lambda x: (
-                x['priority'],
-                datetime.strptime(x['deadline'], "%d/%m/%Y") if x['deadline'] else datetime.max
-            )
+                x["priority"],
+                datetime.strptime(x["deadline"], "%d/%m/%Y") if x["deadline"] else datetime.max,
+            ),
         )
-        title = "Tasks Sorted by Priority and Deadline"
     elif option == "pending":
-        tasks_to_view = sorted(
-            [task for task in todo_list if not task['completed']],
+        return sorted(
+            [task for task in todo_list if not task["completed"]],
             key=lambda x: (
-                x['priority'],
-                datetime.strptime(x['deadline'], "%d/%m/%Y") if x['deadline'] else datetime.max
-            )
+                x["priority"],
+                datetime.strptime(x["deadline"], "%d/%m/%Y") if x["deadline"] else datetime.max,
+            ),
         )
-        title = "Pending Tasks"
     elif option == "completed":
-        tasks_to_view = sorted(
-            [task for task in todo_list if task['completed']],
+        return sorted(
+            [task for task in todo_list if task["completed"]],
             key=lambda x: (
-                x['priority'],
-                datetime.strptime(x['deadline'], "%d/%m/%Y") if x['deadline'] else datetime.max
-            )
+                x["priority"],
+                datetime.strptime(x["deadline"], "%d/%m/%Y") if x["deadline"] else datetime.max,
+            ),
         )
-        title = "Completed Tasks"
-    else:
-        st.error("Invalid viewing option.")
-        return
 
-    if not tasks_to_view:
-        st.write(f"\nNo tasks found for the selected option: {title}.")
-    else:
-        st.write(f"\n{title}:")
-        for idx, task in enumerate(tasks_to_view, 1):
-            status = "✓" if task['completed'] else "✗"
-            deadline = task.get('deadline', "No deadline")
-            st.write(f"{idx}. {task['name']} [Priority: {task['priority']}] [Deadline: {deadline}] [{status}]")
+# Main application
+def main():
+    st.title("To-Do List Manager")
+    load_data()  # Load data at the start
 
-def add_task():
-    task_name = st.text_input("Enter the task you want to add:")
-    if task_name:
-        try:
-            priority = st.number_input("Enter the priority of the task (1 = highest priority):", min_value=1)
+    # Sidebar menu
+    menu = ["View All Tasks", "View Pending Tasks", "View Completed Tasks", "Add Task", "Mark Task Complete", "Remove Task"]
+    choice = st.sidebar.selectbox("Menu", menu)
 
-            # Validate and get deadline input in DD/MM/YYYY format
-            while True:
-                deadline = st.text_input("Enter the deadline (DD/MM/YYYY) or leave blank for no deadline:")
-                if not deadline:  # Allow blank input for no deadline
-                    deadline = None
-                    break
-                try:
-                    # Parse and format date as DD/MM/YYYY
-                    deadline_date = datetime.strptime(deadline, "%d/%m/%Y") 
-                    today = datetime.now()
-                    if deadline_date < today:
-                        st.error("Error: Deadline cannot be in the past.")
-                        continue  # Continue the loop to ask for input again
-                    deadline = deadline_date.strftime("%d/%m/%Y") 
-                    break  # Valid date entered
-                except ValueError:
-                    st.error("Invalid date format. Please try again (format: DD/MM/YYYY).")
+    # Display tasks
+    if choice == "View All Tasks":
+        st.header("All Tasks")
+        tasks = get_sorted_tasks("all")
+        if tasks:
+            for idx, task in enumerate(tasks, 1):
+                status = "✓" if task["completed"] else "✗"
+                deadline = task["deadline"] or "No deadline"
+                st.write(f"{idx}. {task['name']} [Priority: {task['priority']}] [Deadline: {deadline}] [{status}]")
+        else:
+            st.write("No tasks to display.")
 
-            todo_list.append({'name': task_name, 'priority': priority, 'deadline': deadline, 'completed': False})
-            st.success(f"Task '{task_name}' with priority {priority} added.")
-            save_data()  # Save after adding a task
-        except ValueError:
-            st.error("Invalid priority. Please enter a number.")
-    else:
-        st.warning("Task cannot be empty.")
+    elif choice == "View Pending Tasks":
+        st.header("Pending Tasks")
+        tasks = get_sorted_tasks("pending")
+        if tasks:
+            for idx, task in enumerate(tasks, 1):
+                deadline = task["deadline"] or "No deadline"
+                st.write(f"{idx}. {task['name']} [Priority: {task['priority']}] [Deadline: {deadline}] [✗]")
+        else:
+            st.write("No pending tasks.")
+
+    elif choice == "View Completed Tasks":
+        st.header("Completed Tasks")
+        tasks = get_sorted_tasks("completed")
+        if tasks:
+            for idx, task in enumerate(tasks, 1):
+                deadline = task["deadline"] or "No deadline"
+                st.write(f"{idx}. {task['name']} [Priority: {task['priority']}] [Deadline: {deadline}] [✓]")
+        else:
+            st.write("No completed tasks.")
+
+    # Add a task
+    elif choice == "Add Task":
+        st.header("Add a New Task")
+        task_name = st.text_input("Task Name")
+        priority = st.number_input("Priority (1 = highest)", min_value=1, step=1)
+        deadline = st.date_input("Deadline (optional)", value=None)
+        if st.button("Add Task"):
+            if task_name.strip():
+                todo_list.append(
+                    {
+                        "name": task_name.strip(),
+                        "priority": int(priority),
+                        "deadline": deadline.strftime("%d/%m/%Y") if deadline else None,
+                        "completed": False,
+                    }
+                )
+                save_data()
+                st.success(f"Task '{task_name}' added.")
+            else:
+                st.error("Task name cannot be empty.")
+
+    # Mark a task as complete
+    elif choice == "Mark Task Complete":
+        st.header("Mark a Task as Complete")
+        tasks = get_sorted_tasks("pending")
+        if tasks:
+            task_to_complete = st.selectbox("Select Task", [f"{idx + 1}. {task['name']}" for idx, task in enumerate(tasks)])
+            if st.button("Mark Complete"):
+                task_index = int(task_to_complete.split(".")[0]) - 1
+                selected_task = tasks[task_index]
+                for task in todo_list:
+                    if task == selected_task:
+                        task["completed"] = True
+                        break
+                save_data()
+                st.success(f"Task '{selected_task['name']}' marked as complete.")
+        else:
+            st.write("No pending tasks to complete.")
+
+    # Remove a task
+    elif choice == "Remove Task":
+        st.header("Remove a Task")
+        tasks = get_sorted_tasks("all")
+        if tasks:
+            task_to_remove = st.selectbox("Select Task", [f"{idx + 1}. {task['name']}" for idx, task in enumerate(tasks)])
+            if st.button("Remove Task"):
+                task_index = int(task_to_remove.split(".")[0]) - 1
+                selected_task = tasks[task_index]
+                todo_list.remove(selected_task)
+                save_data()
+                st.success(f"Task '{selected_task['name']}' removed.")
+        else:
+            st.write("No tasks to remove.")
+
+    st.sidebar.write("© To-Do List Manager")
+
+# Run the app
+if __name__ == "__main__":
+    main()
