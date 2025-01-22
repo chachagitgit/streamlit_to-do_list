@@ -1,0 +1,91 @@
+import streamlit as st
+import json
+
+filename = "todo_list.json"
+
+def load_data():
+    """Loads the to-do list from a JSON file."""
+    try:
+        with open(filename, 'r') as f:
+            todo_list = json.load(f)
+    except FileNotFoundError:
+        todo_list = []  # If the file doesn't exist, start with an empty list
+    return todo_list
+
+def save_data(todo_list):
+    """Saves the to-do list to a JSON file."""
+    with open(filename, 'w') as f:
+        json.dump(todo_list, f, indent=2)
+
+def display_menu():
+    st.title("To-Do List App")
+    st.sidebar.header("Menu")
+    options = ["View Tasks", "Add Task", "Mark Task as Complete", "Remove Task"]
+    selected_option = st.sidebar.selectbox("Select an option", options)
+    return selected_option
+
+def view_tasks(todo_list):
+    if not todo_list:
+        st.write("\nYour to-do list is empty!")
+    else:
+        st.write("\nYour To-Do List (Sorted by Priority):")
+        sorted_tasks = sorted(todo_list, key=lambda x: x['priority'])
+        for idx, task in enumerate(sorted_tasks, 1):
+            status = "✓" if task['completed'] else "✗"
+            st.write(f"{idx}. {task['name']} [Priority: {task['priority']}] [{status}]")
+    return sorted_tasks
+
+def add_task(todo_list):
+    task_name = st.text_input("Enter the task you want to add:")
+    if task_name:
+        try:
+            priority = st.number_input("Enter the priority of the task (1 = highest priority)", min_value=1, step=1)
+            todo_list.append({'name': task_name, 'priority': priority, 'completed': False})
+            st.success(f"Task '{task_name}' with priority {priority} added.")
+        except ValueError:
+            st.error("Invalid priority. Please enter a number.")
+    return todo_list
+
+def mark_complete(todo_list):
+    sorted_tasks = view_tasks(todo_list)
+    if sorted_tasks:
+        task_number = st.number_input("Enter the number of the task to mark as complete") 
+        if 1 <= task_number <= len(sorted_tasks):
+            task_to_mark = sorted_tasks[task_number - 1]
+            for i, task in enumerate(todo_list):
+                if task == task_to_mark:
+                    todo_list[i]['completed'] = True
+                    st.success(f"Task '{task_to_mark['name']}' marked as complete.")
+                    break
+    return todo_list
+
+def remove_task(todo_list):
+    sorted_tasks = view_tasks(todo_list)
+    if sorted_tasks:
+        task_number = st.number_input("Enter the number of the task to remove") 
+        if 1 <= task_number <= len(sorted_tasks):
+            task_to_remove = sorted_tasks[task_number - 1]
+            for i, task in enumerate(todo_list):
+                if task == task_to_remove:
+                    todo_list.pop(i)
+                    st.success(f"Task '{task_to_remove['name']}' removed.")
+                    break
+    return todo_list
+
+def main():
+    todo_list = load_data()
+    selected_option = display_menu()
+
+    if selected_option == "View Tasks":
+        view_tasks(todo_list)
+    elif selected_option == "Add Task":
+        todo_list = add_task(todo_list)
+    elif selected_option == "Mark Task as Complete":
+        todo_list = mark_complete(todo_list)
+    elif selected_option == "Remove Task":
+        todo_list = remove_task(todo_list)
+
+    save_data(todo_list)
+
+if __name__ == "__main__":
+    main()
