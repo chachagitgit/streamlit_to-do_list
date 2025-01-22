@@ -82,7 +82,6 @@ def view_tasks(option="all"):
             st.write(f"{idx}. {task['name']} [Priority: {task['priority']}] [Deadline: {deadline}] [{status}]")
 
 def add_task():
-    """Prompts the user for task details, validates input, and adds the task to the list."""
     task_name = st.text_input("Enter the task you want to add:")
     if task_name:
         try:
@@ -98,4 +97,18 @@ def add_task():
                     # Parse and format date as DD/MM/YYYY
                     deadline_date = datetime.strptime(deadline, "%d/%m/%Y") 
                     today = datetime.now()
-                    if deadline_date < today
+                    if deadline_date < today:
+                        st.error("Error: Deadline cannot be in the past.")
+                        continue  # Continue the loop to ask for input again
+                    deadline = deadline_date.strftime("%d/%m/%Y") 
+                    break  # Valid date entered
+                except ValueError:
+                    st.error("Invalid date format. Please try again (format: DD/MM/YYYY).")
+
+            todo_list.append({'name': task_name, 'priority': priority, 'deadline': deadline, 'completed': False})
+            st.success(f"Task '{task_name}' with priority {priority} added.")
+            save_data()  # Save after adding a task
+        except ValueError:
+            st.error("Invalid priority. Please enter a number.")
+    else:
+        st.warning("Task cannot be empty.")
