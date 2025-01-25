@@ -155,9 +155,15 @@ elif choice == "Mark Task Complete":
 # Remove a task
 elif choice == "Remove Task":
     st.header("Remove a Task")
-    tasks = get_sorted_tasks("all")  # Sort tasks by priority and deadline
+    tasks = get_sorted_tasks("priority")  # Ensure tasks are sorted by priority and deadline
     if tasks:
-        task_to_remove = st.selectbox("Select Task", [f"{idx + 1}. {task['name']} [Priority: {task['priority']}] [Deadline: {task['deadline'] or 'No deadline'}]" for idx, task in enumerate(tasks)])
+        task_to_remove = st.selectbox(
+            "Select Task",
+            [
+                f"{idx + 1}. {task['name']} [Priority: {task['priority']}] [Deadline: {task['deadline'] or 'No deadline'}]"
+                for idx, task in enumerate(tasks)
+            ],
+        )
         if st.button("Remove Task"):
             task_index = int(task_to_remove.split(".")[0]) - 1
             selected_task = tasks[task_index]
@@ -166,6 +172,7 @@ elif choice == "Remove Task":
             st.success(f"Task '{selected_task['name']}' removed.")
     else:
         st.write("No tasks to remove.")
+
 
 
     st.sidebar.write("© To-Do List Manager")
